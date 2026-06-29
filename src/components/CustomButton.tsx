@@ -1,49 +1,103 @@
-// src/components/CustomButton.tsx
+/**
+ * components/CustomButton.tsx
+ * Reusable button with primary / success / danger / outline variants.
+ * Handles disabled and loading states internally.
+ */
 
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, TouchableOpacityProps } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
+import { COLORS, BORDER_RADIUS, FONT_SIZES, SPACING } from '../utils/constants';
 
-interface CustomButtonProps extends TouchableOpacityProps {
+// ─── Props ────────────────────────────────────────────────────────────────────
+
+interface CustomButtonProps {
   title: string;
+  onPress: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+  variant?: 'primary' | 'success' | 'danger' | 'outline';
+  style?: ViewStyle;
+  textStyle?: TextStyle;
 }
 
-const CustomButton: React.FC<CustomButtonProps> = ({ title, disabled, style, ...props }) => {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+const CustomButton: React.FC<CustomButtonProps> = ({
+  title,
+  onPress,
+  disabled  = false,
+  loading   = false,
+  variant   = 'primary',
+  style,
+  textStyle,
+}) => {
+  const isDisabled = disabled || loading;
+
+  // Map variant → background style
+  const variantStyle = {
+    primary: styles.primaryBg,
+    success: styles.successBg,
+    danger:  styles.dangerBg,
+    outline: styles.outlineBg,
+  }[variant];
+
+  // Spinner / text colour differs for outline buttons
+  const spinnerColor = variant === 'outline' ? COLORS.primary : COLORS.white;
+  const labelStyle   = variant === 'outline' ? styles.outlineLabel : styles.label;
+
   return (
-    <TouchableOpacity 
-      style={[styles.button, disabled && styles.disabledButton, style]} 
-      disabled={disabled}
-      {...props}
+    <TouchableOpacity
+      style={[styles.base, variantStyle, isDisabled && styles.disabled, style]}
+      onPress={onPress}
+      disabled={isDisabled}
+      activeOpacity={0.8}
     >
-      <Text style={[styles.text, disabled && styles.disabledText]}>{title}</Text>
+      {loading ? (
+        <ActivityIndicator color={spinnerColor} size="small" />
+      ) : (
+        <Text style={[labelStyle, textStyle]}>{title}</Text>
+      )}
     </TouchableOpacity>
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  button: {
-    backgroundColor: '#007AFF', // iOS Blue
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 10,
-    elevation: 2, // Shadow for Android
-    shadowColor: '#000', // Shadows for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  base: {
+    height:           52,
+    borderRadius:     BORDER_RADIUS.md,
+    justifyContent:   'center',
+    alignItems:       'center',
+    paddingHorizontal: SPACING.lg,
   },
-  disabledButton: {
-    backgroundColor: '#E5E5EA',
-    elevation: 0,
-    shadowOpacity: 0,
+  primaryBg: { backgroundColor: COLORS.primary },
+  successBg: { backgroundColor: COLORS.success },
+  dangerBg:  { backgroundColor: COLORS.error },
+  outlineBg: {
+    backgroundColor: 'transparent',
+    borderWidth:     2,
+    borderColor:     COLORS.primary,
   },
-  text: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+  disabled: { opacity: 0.42 },
+  label: {
+    color:          COLORS.white,
+    fontSize:       FONT_SIZES.md,
+    fontWeight:     '700',
+    letterSpacing:  0.4,
   },
-  disabledText: {
-    color: '#8E8E93',
+  outlineLabel: {
+    color:          COLORS.primary,
+    fontSize:       FONT_SIZES.md,
+    fontWeight:     '700',
+    letterSpacing:  0.4,
   },
 });
 
